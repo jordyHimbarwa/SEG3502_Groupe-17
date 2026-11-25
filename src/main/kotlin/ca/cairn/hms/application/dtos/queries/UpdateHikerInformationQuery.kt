@@ -5,6 +5,8 @@ import java.util.UUID
 
 /** Mise à jour de ses propres informations par un randonneur. Le courriel (identifiant unique) n'est pas modifiable. */
 data class UpdateHikerInformationQuery(
+    /** Utilisateur connecté qui soumet la modification ; doit être le randonneur lui-même. */
+    val requesterId: UUID,
     val hikerId: UUID,
     val firstName: String,
     val lastName: String,

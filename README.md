@@ -8,18 +8,23 @@ Ce dépôt contient la structure initiale du back-end : sous-domaines, commandes
 ```
 src/main/kotlin/ca/cairn/hms/
 ├── domain/                     Un sous-paquetage par sous-domaine (README.md dans chacun)
-│   ├── hike/                   Cœur — randonnées et cycle de vie
-│   ├── signup/                 Cœur — inscriptions et liste d'attente
-│   ├── hiker/                  Support — randonneurs, adhésions, certifications
-│   ├── trail/                  Support — sentiers de la CCN (données externes)
-│   ├── notification/           Générique — courriels et météo
-│   ├── identity/               Générique — authentification et autorisation
-│   └── reporting/              Support — rapport d'utilisation des sentiers
-└── application/
-    ├── usecases/               Une interface par cas d'utilisation
-    └── dtos/
-        ├── queries/            DTO utilisés pour invoquer les commandes
-        └── results/            DTO retournés (Parcourir, S'inscrire)
+│   ├── shared/                 Acteur, événements de domaine, émetteur, exceptions
+│   ├── hike/                   Cœur — agrégat Randonnée, fabrique, dépôt, événements, façade
+│   ├── signup/                 Cœur — agrégat Inscription, liste d'attente, façade
+│   ├── hiker/                  Support — agrégat Randonneur, adhésion, certification, façade
+│   ├── trail/                  Support — agrégat Sentier (copie locale des données de la CCN), façade
+│   ├── notification/           Générique — réalisé par les services application.services
+│   ├── identity/               Générique — réalisé par AuthenticationService
+│   └── reporting/              Support — hors portée du livrable 2
+├── application/
+│   ├── usecases/               Une interface par cas d'utilisation
+│   │   └── implementation/     Réalisations des cas d'utilisation
+│   ├── services/               Services externes : courriel, météo, CCN, authentification, codes d'invitation
+│   └── dtos/                   DTO de requête et de résultat
+└── config/                     Horloge du système
+src/test/kotlin/ca/cairn/hms/
+├── stubs/                      Stubs des fabriques, dépôts, services et de l'émetteur d'événements
+└── contracts/                  Configuration Cucumber + Spring, définitions d'étapes, données de test
 src/test/resources/contracts/   Un contrat Cucumber (.feature) par commande
 ```
 
@@ -50,10 +55,18 @@ Se connecter, Se déconnecter et Générer un rapport d'utilisation des sentiers
 - Difficulté des sentiers et niveau d'habileté sont deux énumérations alignées un pour un (facile ↔ débutant, …, très difficile ↔ expert).
 - Ambiguïté signalée au client : le glossaire limite l'inscription à « son niveau ou un niveau au-dessus », le cas d'utilisation à « au plus un niveau au-dessus ». Les contrats retiennent la seconde lecture (un randonneur peut s'inscrire à une randonnée plus facile).
 
-## Construction
+## Construction et contrats
 
 ```
-gradle build
+./gradlew test
 ```
 
-Les contrats sont rédigés en Gherkin français (`# language: fr`) ; les définitions d'étapes restent à écrire.
+Les contrats sont rédigés en Gherkin français (`# language: fr`) et s'exécutent avec `./gradlew test`.
+Le rapport Cucumber est produit dans `build/reports/cucumber/contracts.html`.
+
+Les fabriques et les dépôts sont des interfaces du domaine ; leurs seules implémentations, à ce stade,
+sont les stubs des sources de test. L'application ne peut donc pas encore démarrer avec `bootRun` :
+les implémentations réelles viendront au livrable 3.
+
+Le workflow `.github/workflows/contracts.yml` exécute les contrats ; il se déclenche manuellement
+depuis l'onglet Actions.
